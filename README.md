@@ -14,30 +14,43 @@ rag-retrieval-study/
   data/
     raw/
       scifact/              # Raw BEIR SciFact archive, corpus, queries, qrels
+      scifact_official/     # Official SciFact repository release with rationale annotations
+      hotpotqa/             # Official HotpotQA distractor validation release
     processed/
-      scifact/              # Clean JSONL artifacts with preserved metadata & evidence
+      scifact/              # Clean SciFact JSONL artifacts
+      scifact_evidence.jsonl # Sentence-level evidence ground truth for SciFact
+      hotpotqa_questions.jsonl  # Sampled HotpotQA questions (N=500, seed 12345)
+      hotpotqa_candidates.jsonl # Candidate distractor paragraphs (10 per question)
+      hotpotqa_evidence.jsonl   # Exact sentence evidence mapping for HotpotQA
   src/
     datasets/
       scifact.py            # SciFact loader, parser, and exporter
+      evidence_mapper.py    # SciFact rationale sentence alignment mapper
+      hotpotqa.py           # HotpotQA distractor loader, sampler, and evidence mapper
       inspect_dataset.py    # Diagnostic inspection script
-    retrieval/              # BM25, Dense, and Hybrid (RRF) retrieval methods
+    retrieval/              # BM25, Dense (BGE-base-en-v1.5 + FAISS), and Hybrid (RRF)
     evaluation/
       metrics.py            # Document- and evidence-level retrieval metrics
-    experiments/            # Experiment execution pipelines and harness
+    experiments/
+      run_experiments.py    # SciFact reproducible retrieval and evaluation runner
+      validate_experiments.py # 10-point integrity and sanity checker for SciFact
+      run_hotpotqa.py       # HotpotQA distractor retrieval and evaluation runner
+      validate_hotpotqa.py  # 9-point integrity and sanity checker for HotpotQA
   results/
     raw/                    # Per-query retrieval runs and raw inspection dumps
-    metrics/                # Computed metric summaries (CSV/JSON)
+    metrics/                # Computed metric summaries (CSV/JSON) and audit reports
     tables/                 # Formatted comparative tables
   figures/                  # Visualizations and metric discrepancy plots
   tests/
     test_metrics.py         # Unit tests for evaluation metrics
     test_datasets.py        # Unit tests for dataset parsing and integrity
+    test_retrieval.py       # Unit tests for BM25, Dense, and Hybrid retrievers
+    test_experiment_validation.py # Unit tests for SciFact experiment validation
+    test_hotpotqa.py        # Unit tests for HotpotQA pipeline, metrics, and validation
   paper/                    # Scientific writeup, LaTeX notes, and findings
   requirements.txt          # Python dependencies
   pyproject.toml            # Project and testing configuration
   README.md                 # Setup, download, and execution instructions
-  .gitignore                # Ignored cache, model checkpoints, and data archives
-  .env.example              # Sample environment configuration
 ```
 
 ---
@@ -202,15 +215,15 @@ python scripts/compare.py --query "myeloid-derived suppressor cells" --k 5
 
 ## Phase 4: Evaluation Metrics
 
-Formal mathematical definitions and denominator specifications are detailed in [`docs/metrics_definition.md`](docs/metrics_definition.md):
+Formal mathematical definitions and denominator specifications are detailed in [`docs/metrics_definition.md`](docs/metrics_definition.md). Primary experimental cutoffs evaluated across both benchmarks are $K \in \{3, 5, 7, 9\}$:
 
 1. **Document-Level Metrics:**
-   - **Recall@K** ($K$ configurable, e.g. $\{5, 10\}$): Fraction of gold relevant documents retrieved in top-$K$. Denominator is $|D^*|$ (total relevant docs for the query).
-   - **Precision@K** ($K$ configurable): Fraction of top-$K$ retrieved slots that are relevant. Denominator is strictly $K$. When fewer than $K$ documents are available, unretrieved slots are treated as non-relevant.
+   - **Recall@K** ($K \in \{3, 5, 7, 9\}$): Fraction of gold relevant documents retrieved in top-$K$. Denominator is $|D^*|$ (total relevant docs for the query).
+   - **Precision@K** ($K \in \{3, 5, 7, 9\}$): Fraction of top-$K$ retrieved slots that are relevant. Denominator is strictly $K$. When fewer than $K$ documents are available, unretrieved slots are treated as non-relevant.
    - **MRR (Mean Reciprocal Rank)**: Reciprocal rank of the first relevant retrieved document ($1/\text{rank}_1$). Queries with no relevant result receive $0.0$.
 2. **Evidence-Level Metrics:**
    - **Evidence Recall@K**: Fraction of annotated supporting evidence units covered by retrieved passages. Denominator is $|E^*|$ (total annotated evidence units for the query).
-   - **Evidence Completeness@K**: Strict binary flag ($1.0$ or $0.0$) indicating whether **every** required evidence unit is covered within top-$K$. Aggregated as the fraction of evaluable questions with complete evidence.
+   - **Evidence Completeness@K**: Strict binary flag ($1.0$ or $0.0$) indicating whether **every** required evidence unit is covered within top-$K$. Aggregated as the macro-averaged fraction of evaluable questions with complete evidence.
 
 **Passage & Context Coverage Semantics:**
 - A document being retrieved does **not** automatically imply all of its supporting sentences were retrieved unless the retrieval context actually includes those sentences.
@@ -219,48 +232,150 @@ Formal mathematical definitions and denominator specifications are detailed in [
 
 ---
 
-## Phase 5: Reproducible Experiment Runner
+## Phase 5: Reproducible SciFact Experiment Runner
 
-Run the full comparative evaluation across sparse (BM25), dense (BAAI/bge-base-en-v1.5 + FAISS), and hybrid (RRF, $c=60$) retrieval over all official SciFact test queries:
+Run the full comparative evaluation across sparse (BM25), dense (BAAI/bge-base-en-v1.5 + FAISS), and hybrid (RRF, $c=60$) retrieval over all official SciFact test queries for cutoffs $K \in \{3, 5, 7, 9\}$:
 
 ```bash
-# Full execution across BM25, Dense, and Hybrid for K=5 and K=10:
-python -m src.experiments.run_experiments --dataset scifact
+# Full execution across BM25, Dense, and Hybrid for K=3, 5, 7, 9:
+python -m src.experiments.run_experiments --dataset scifact --k-values 3 5 7 9
 
 # Fast single-method execution:
-python -m src.experiments.run_experiments --dataset scifact --methods bm25
+python -m src.experiments.run_experiments --dataset scifact --methods bm25 --k-values 3 5 7 9
 
 # Rerun from scratch (overwrites previous runs):
-python -m src.experiments.run_experiments --dataset scifact --overwrite
+python -m src.experiments.run_experiments --dataset scifact --k-values 3 5 7 9 --overwrite
 ```
 
 ### Generated Artifacts
-- `results/raw/scifact_runs.jsonl`: 1,800 detailed retrieval records preserving query IDs, retrieved document IDs, scores, latencies, evidence items recovered, and query-level metrics.
-- `results/metrics/scifact_per_query.csv`: Per-query metric evaluation table for all (query, method, K) runs.
+- `results/raw/scifact_runs.jsonl`: 3,600 detailed retrieval records preserving query IDs, retrieved document IDs, scores, latencies, evidence items recovered, and query-level metrics (300 queries × 3 methods × 4 cutoffs).
+- `results/metrics/scifact_per_query.csv`: Per-query metric evaluation table for all 3,600 runs.
 - `results/metrics/scifact_summary.csv`: Aggregated comparative summary table.
 - `results/metrics/scifact_run_metadata.json`: Full environment provenance, dataset SHA-256 fingerprints, random seed, and library versions.
 
-### SciFact Evaluation Results Summary
+### SciFact Evaluation Results Summary ($N=300$, Evaluable Evidence Queries $=188$)
 
 | Method | K | Query Count | Recall@K | Precision@K | MRR | Evidence Recall@K | Evidence Completeness@K | Mean Latency (ms) | Median Latency (ms) |
 |---|---|---|---|---|---|---|---|---|---|
-| **BM25** | 5 | 300 | 0.6969 | 0.1500 | 0.5888 | 0.8621 | 0.8404 | 24.21 | 23.01 |
-| **BM25** | 10 | 300 | 0.7598 | 0.0833 | 0.5970 | 0.9120 | 0.8936 | 24.21 | 23.01 |
-| **Dense** | 5 | 300 | 0.8036 | 0.1787 | 0.6898 | 0.9319 | 0.9149 | 71.25 | 68.45 |
-| **Dense** | 10 | 300 | 0.8703 | 0.0987 | 0.6987 | 0.9752 | 0.9681 | 71.25 | 68.45 |
-| **Hybrid** | 5 | 300 | 0.7770 | 0.1700 | 0.6610 | 0.9219 | 0.8989 | 103.46 | 98.27 |
-| **Hybrid** | 10 | 300 | 0.8283 | 0.0920 | 0.6676 | 0.9466 | 0.9255 | 103.46 | 98.27 |
+| **BM25** | 3 | 300 | 0.6375 | 0.2256 | 0.5750 | 0.8032 | 0.7872 | 25.45 | 23.90 |
+| **BM25** | 5 | 300 | 0.6969 | 0.1500 | 0.5888 | 0.8621 | 0.8404 | 25.45 | 23.90 |
+| **BM25** | 7 | 300 | 0.7358 | 0.1148 | 0.5946 | 0.9014 | 0.8830 | 25.45 | 23.90 |
+| **BM25** | 9 | 300 | 0.7408 | 0.0900 | 0.5950 | 0.9067 | 0.8883 | 25.45 | 23.90 |
+| **Dense** | 3 | 300 | 0.7401 | 0.2700 | 0.6767 | 0.8833 | 0.8511 | 64.08 | 37.14 |
+| **Dense** | 5 | 300 | 0.8036 | 0.1787 | 0.6898 | 0.9319 | 0.9149 | 64.08 | 37.14 |
+| **Dense** | 7 | 300 | 0.8429 | 0.1352 | 0.6957 | 0.9504 | 0.9415 | 64.08 | 37.14 |
+| **Dense** | 9 | 300 | 0.8630 | 0.1085 | 0.6981 | 0.9752 | 0.9681 | 64.08 | 37.14 |
+| **Hybrid** | 3 | 300 | 0.7183 | 0.2589 | 0.6483 | 0.8817 | 0.8617 | 159.99 | 103.92 |
+| **Hybrid** | 5 | 300 | 0.7770 | 0.1700 | 0.6610 | 0.9219 | 0.8989 | 159.99 | 103.92 |
+| **Hybrid** | 7 | 300 | 0.7945 | 0.1248 | 0.6641 | 0.9386 | 0.9202 | 159.99 | 103.92 |
+| **Hybrid** | 9 | 300 | 0.8200 | 0.1011 | 0.6670 | 0.9466 | 0.9255 | 159.99 | 103.92 |
+
+---
+
+## Phase 6: Experiment Validation & Quality Checks (SciFact)
+
+To guarantee scientific rigor prior to publication, the automated validation suite in `src/experiments/validate_experiments.py` verifies 10 sanity and integrity checks:
+
+```bash
+python -m src.experiments.validate_experiments
+```
+
+### Verified Checks (10/10 Passed)
+1. **Query Count Check:** Exactly 300 unique test queries evaluated.
+2. **Corpus Size Check:** Exactly 5,183 unique documents in BEIR corpus.
+3. **Evidence Count Check:** Exactly 366 sentence-level evidence annotations.
+4. **Evidence Mapping Sanity:** 0 unmapped evidence records (100% matched).
+5. **Run Count Check:** Exactly 1,200 runs per method (3,600 total across BM25, Dense, Hybrid).
+6. **No Duplicate Ranks:** Every retrieved ranking has distinct ranks $[1, \dots, K]$.
+7. **Score Monotonicity:** Retrieval scores are non-increasing with rank.
+8. **Positive Latencies:** All recorded per-query latencies are strictly positive.
+9. **Evidence Metric Invariant:** $\text{EvidenceCompleteness@K} \le \text{EvidenceRecall@K}$ holds for all runs.
+10. **Summary Recomputability:** 100% of summary metrics independently recompute from raw records within $10^{-4}$ tolerance.
+
+Artifact generated: `results/metrics/validation_report.json` (`safe_to_use_in_paper: true`).
+
+---
+
+## Phase 7: HotpotQA Distractor Benchmark Extension
+
+To evaluate evidence completeness in **multi-hop reasoning**, we evaluate sparse (BM25), dense (BAAI/bge-base-en-v1.5), and hybrid (RRF, $c=60$) retrieval on the official HotpotQA distractor validation split.
+
+> [!WARNING]
+> **Experimental Protocol Disclaimer:** This experiment operates on the **closed distractor setting** supplied with the official HotpotQA benchmark. For each question, retrieval ranks the exact **10 candidate paragraphs** (2 gold context paragraphs + 8 adversarial distractors) provided in the dataset. This is **not** open-domain full-Wikipedia retrieval.
+
+### Protocol Details
+- **Question Sampling:** 500 questions sampled from the official validation split with documented random seed `12345`.
+- **Candidates:** 4,954 unique candidate paragraphs (10 per question, shared candidates across queries deduplicated in global store).
+- **Supporting Facts:** 1,208 gold supporting facts mapped to pairs of `(title, sentence_idx)` with exact sentence text preserved.
+- **Fair Comparison:** All three methods (BM25, Dense, Hybrid) receive identical candidate pools for every query. Qrels and answers are never accessed during ranking.
+
+### Execution
+
+```bash
+# Run full HotpotQA evaluation for K=3, 5, 7, 9 (uses pre-cached candidate embeddings):
+python -m src.experiments.run_hotpotqa --sample-size 500 --seed 12345 --k-values 3 5 7 9
+
+# Run validation checks:
+python -m src.experiments.validate_hotpotqa
+```
+
+### Generated Artifacts
+- `results/raw/hotpotqa_runs.jsonl`: 6,000 detailed retrieval records (500 queries × 3 methods × 4 cutoffs).
+- `results/metrics/hotpotqa_per_query.csv`: Per-query metrics for all 6,000 runs.
+- `results/metrics/hotpotqa_summary.csv`: Aggregated comparative summary table.
+- `results/metrics/hotpotqa_validation_report.json`: 9-point validation report (9/9 passed).
+
+### HotpotQA Evaluation Results Summary ($N=500$, Closed Pool: 10 Paras/Query)
+
+| Method | K | Query Count | Recall@K | Precision@K | MRR | Evidence Recall@K | Evidence Completeness@K | Mean Latency (ms) | Median Latency (ms) |
+|---|---|---|---|---|---|---|---|---|---|
+| **BM25** | 3 | 500 | 0.6780 | 0.4520 | 0.8670 | 0.6809 | 0.4140 | 0.66 | 0.63 |
+| **BM25** | 5 | 500 | 0.8040 | 0.3216 | 0.8736 | 0.8078 | 0.6360 | 0.64 | 0.60 |
+| **BM25** | 7 | 500 | 0.8660 | 0.2474 | 0.8762 | 0.8679 | 0.7440 | 0.64 | 0.59 |
+| **BM25** | 9 | 500 | 0.9330 | 0.2073 | 0.8776 | 0.9350 | 0.8660 | 0.66 | 0.60 |
+| **Dense** | 3 | 500 | 0.8540 | 0.5693 | 0.9353 | 0.8551 | 0.7200 | 55.92 | 54.35 |
+| **Dense** | 5 | 500 | 0.9270 | 0.3708 | 0.9366 | 0.9290 | 0.8600 | 0.04 | 0.03 |
+| **Dense** | 7 | 500 | 0.9630 | 0.2751 | 0.9373 | 0.9636 | 0.9280 | 0.03 | 0.03 |
+| **Dense** | 9 | 500 | 0.9810 | 0.2180 | 0.9375 | 0.9812 | 0.9620 | 0.04 | 0.04 |
+| **Hybrid** | 3 | 500 | 0.8050 | 0.5367 | 0.9287 | 0.8082 | 0.6340 | 0.82 | 0.77 |
+| **Hybrid** | 5 | 500 | 0.9010 | 0.3604 | 0.9332 | 0.9025 | 0.8060 | 0.76 | 0.70 |
+| **Hybrid** | 7 | 500 | 0.9470 | 0.2706 | 0.9335 | 0.9478 | 0.8960 | 0.74 | 0.69 |
+| **Hybrid** | 9 | 500 | 0.9830 | 0.2184 | 0.9338 | 0.9825 | 0.9660 | 0.74 | 0.69 |
+
+---
+
+## Key Research Findings: Document Recall vs. Evidence Completeness
+
+Our empirical findings across both benchmarks directly address the core research question:
+
+1. **Single-Premise vs. Multi-Hop Retrieval:**
+   - On **SciFact** (single-premise scientific claims), Document Recall and Evidence Completeness track relatively closely because relevant rationale sentences reside within a single abstract.
+   - On **HotpotQA** (multi-hop questions requiring disjoint Wikipedia articles), conventional Document Recall **drastically overestimates retrieval success**.
+2. **The Completeness Deficit in Multi-Hop Retrieval:**
+   - At $K=3$, BM25 achieves a Document Recall of **67.8%**, but its Evidence Completeness is only **41.4%**—a **26.4 percentage-point deficit**.
+   - Retrievers frequently locate one relevant hop while missing the second, leaving the question unanswerable by a downstream reader even though conventional IR metrics report strong recall.
+   - At $K=5$, the BM25 gap remains substantial: **80.4% Document Recall** vs. **63.6% Evidence Completeness** (16.8-point gap).
+   - Even with dense retrieval at $K=3$, Document Recall is **85.4%** while Evidence Completeness is **72.0%** (13.4-point gap).
+3. **Implication for RAG Evaluation:**
+   - Document-level retrieval benchmarks provide a misleading picture of RAG readiness for multi-hop tasks. Evaluating **Evidence Completeness@K** is essential to avoid overestimating pipeline capabilities.
 
 ---
 
 ## Running Unit Tests
 
-Run the test suite with `pytest`:
+Run the full test suite with `pytest`:
 
 ```bash
 python -m pytest tests -v
 ```
 
-All 73 unit tests validate document-level metrics, evidence completeness edge cases, multi-hop evidence spread, ranking validation, passage-to-document mapping, context-sensitive evidence matching, BM25/Dense/Hybrid retrieval correctness, RRF math, experiment runner reproducibility, resumability, and dataset parsing integrity.
+All **85 unit tests** validate:
+- Document-level metrics (Recall, Precision, MRR) and boundary conditions.
+- Evidence-level metrics (Evidence Recall, Evidence Completeness, multi-hop spread, all-or-nothing logic).
+- Strict context-sensitive evidence matching (exact substring and NFKD normalized matching).
+- Passage-to-document parent ID projection and rank deduplication.
+- Sparse BM25, Dense (`bge-base-en-v1.5`), and Hybrid RRF retrieval correctness.
+- SciFact experiment runner, checkpointing, and 10-point validation suite.
+- HotpotQA distractor dataset loader, sampling determinism, evidence mapper, and 9-point validation suite.
 
-> **Note:** Dense retrieval tests (`TestDenseRetriever`) require FAISS to load successfully. They are automatically skipped on systems where the FAISS DLL is unavailable; all other tests (BM25, RRF, Hybrid, metrics, dataset) run unconditionally.
+> **Note:** Dense retrieval tests requiring FAISS (`TestDenseRetriever`) require the FAISS library to be available. On environments without native FAISS binaries, dense tests are gracefully skipped while all other 80+ tests run and pass unconditionally.

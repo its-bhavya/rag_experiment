@@ -21,7 +21,7 @@ This document formally specifies all retrieval evaluation metrics used to evalua
 
 ## 2. Conventional Document-Level Metrics
 
-### 2.1 Recall@K (Recall@5, Recall@10)
+### 2.1 Recall@K (Recall@3, Recall@5, Recall@7, Recall@9)
 **Definition:**  
 The proportion of gold relevant documents retrieved within the top-$K$ ranks.
 
@@ -32,9 +32,9 @@ $$\text{Recall@K}(q) = \frac{|\text{docs}(R_q@K) \cap D^*_q|}{|D^*_q|}$$
 - **Edge cases:**
   - If $|D^*_q| = 0$: in strict mode raises an explicit `ValueError`; when `empty_relevant_handling="zero"`, returns $0.0$.
   - If $|R_q| = 0$ (retriever returns nothing), $\text{Recall@K}(q) = 0.0$.
-  - $K$ is fully configurable ($K \in \{1, 3, 5, 10, 20\}$).
+  - $K$ is fully configurable (primary experimental cutoffs: $K \in \{3, 5, 7, 9\}$).
 
-### 2.2 Precision@K (Precision@5, Precision@10)
+### 2.2 Precision@K (Precision@3, Precision@5, Precision@7, Precision@9)
 **Definition:**  
 The proportion of top-$K$ retrieved slots that are gold relevant documents.
 
@@ -83,7 +83,7 @@ Evidence matching strictly uses deterministic string normalization:
 
 *No LLM generation or semantic embedding similarity is used during evidence verification.*
 
-### 3.3 Evidence Recall@K (Evidence Recall@5, Evidence Recall@10)
+### 3.3 Evidence Recall@K (Evidence Recall@3, Evidence Recall@5, Evidence Recall@7, Evidence Recall@9)
 **Definition:**  
 The proportion of all annotated gold supporting evidence units covered by the top-$K$ retrieved passages.
 
@@ -95,7 +95,7 @@ $$\text{EvidenceRecall@K}(q) = \frac{|E_{\text{retrieved}}@K(q)|}{|E^*_q|}$$
 - **Denominator Choice:** $|E^*_q|$ (total count of annotated gold evidence units for query $q$).
 - **Rationale:** Measures fractional recovery of the necessary supporting evidence pieces.
 
-### 3.4 Evidence Completeness@K (Evidence Completeness@5, Evidence Completeness@10)
+### 3.4 Evidence Completeness@K (Evidence Completeness@3, Evidence Completeness@5, Evidence Completeness@7, Evidence Completeness@9)
 **Definition:**  
 A strict all-or-nothing binary indicator for a single query indicating whether **every** required gold evidence piece is present in the top-$K$ retrieved passages.
 

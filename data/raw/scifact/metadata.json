@@ -1,0 +1,12 @@
+{
+  "dataset": "scifact",
+  "source_url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip",
+  "archive_file": "scifact.zip",
+  "sha256": "536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165",
+  "download_timestamp": "2026-11-09T11:42:03Z",
+  "split": "test",
+  "corpus_count": 5183,
+  "queries_count": 1109,
+  "qrels_queries_count": 300,
+  "qrels_pairs_count": 339
+}

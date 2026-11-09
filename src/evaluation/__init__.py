@@ -1,0 +1,41 @@
+"""Evaluation metrics and assessment harness."""
+
+from .metrics import (
+    EvidenceItem,
+    QueryResult,
+    QueryEvaluation,
+    RetrievedPassage,
+    map_passages_to_documents,
+    preserve_doc_to_passages,
+    normalize_evidence_text,
+    matches_evidence_text,
+    is_evidence_covered_by_passage,
+    get_covered_evidence,
+    recall_at_k,
+    precision_at_k,
+    reciprocal_rank,
+    evidence_recall_at_k,
+    evidence_completeness_at_k,
+    evaluate_query,
+    aggregate_evaluations,
+)
+
+__all__ = [
+    "EvidenceItem",
+    "RetrievedPassage",
+    "QueryResult",
+    "QueryEvaluation",
+    "map_passages_to_documents",
+    "preserve_doc_to_passages",
+    "normalize_evidence_text",
+    "matches_evidence_text",
+    "is_evidence_covered_by_passage",
+    "get_covered_evidence",
+    "recall_at_k",
+    "precision_at_k",
+    "reciprocal_rank",
+    "evidence_recall_at_k",
+    "evidence_completeness_at_k",
+    "evaluate_query",
+    "aggregate_evaluations",
+]

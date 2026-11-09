@@ -1,0 +1,48 @@
+{
+  "dataset": "SciFact",
+  "split": "test",
+  "counts": {
+    "corpus_count": 5183,
+    "query_count": 1109,
+    "qrels_queries_count": 300,
+    "qrels_pairs_count": 339
+  },
+  "integrity": {
+    "empty_documents_count": 0,
+    "empty_documents": [],
+    "duplicate_doc_ids_found": false,
+    "duplicate_query_ids_found": false,
+    "missing_queries_in_qrels_count": 0,
+    "missing_queries_in_qrels": [],
+    "missing_docs_in_qrels_count": 0,
+    "missing_docs_in_qrels": []
+  },
+  "length_distribution": {
+    "word_count": {
+      "mean": 214.6280146633224,
+      "std": 87.27848763179637,
+      "min": 33.0,
+      "p25": 158.0,
+      "median": 204.0,
+      "p75": 260.0,
+      "p95": 356.0,
+      "max": 1541.0
+    },
+    "char_count": {
+      "mean": 1499.41173065792,
+      "std": 576.9702804209726,
+      "min": 221.0,
+      "p25": 1124.0,
+      "median": 1426.0,
+      "p75": 1811.5,
+      "p95": 2436.8999999999996,
+      "max": 10127.0
+    }
+  },
+  "evidence_annotations": {
+    "all_queries_with_evidence": 693,
+    "all_queries_total_evidence_units": 1391,
+    "test_queries_with_evidence": 188,
+    "test_queries_total_evidence_units": 366
+  }
+}

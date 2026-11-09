@@ -1,0 +1,13 @@
+{
+  "model_id": "BAAI/bge-base-en-v1.5",
+  "dimension": 768,
+  "max_seq_length": 256,
+  "normalized": true,
+  "metric": "cosine_inner_product",
+  "faiss_index_type": "IndexFlatIP",
+  "query_instruction": "Represent this sentence for searching relevant passages: ",
+  "document_format": "title\\ntext",
+  "num_documents": 5183,
+  "device": "cpu",
+  "timestamp": "2026-11-09T13:07:34.546241+00:00"
+}

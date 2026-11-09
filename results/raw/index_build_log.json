@@ -1,0 +1,24 @@
+{
+  "corpus_path": "C:\\Users\\Bhavya\\Desktop\\projects\\rag_experiment\\data\\raw\\scifact\\corpus.jsonl",
+  "num_documents": 5183,
+  "indexes": {
+    "bm25": {
+      "index_type": "BM25Okapi",
+      "k1": 1.5,
+      "b": 0.75,
+      "num_documents": 5183,
+      "output_path": "C:\\Users\\Bhavya\\Desktop\\projects\\rag_experiment\\results\\raw\\bm25_index.pkl",
+      "elapsed_seconds": 1.0
+    },
+    "dense": {
+      "index_type": "FAISS_IndexFlatIP",
+      "model_id": "BAAI/bge-base-en-v1.5",
+      "dimension": 768,
+      "max_seq_length": 256,
+      "normalized": true,
+      "num_documents": 5183,
+      "output_dir": "C:\\Users\\Bhavya\\Desktop\\projects\\rag_experiment\\results\\raw\\dense_index",
+      "elapsed_seconds": 1498.43
+    }
+  }
+}

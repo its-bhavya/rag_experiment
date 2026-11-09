@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Data and Artifacts (large binary or downloaded data)
+data/raw/*.zip
+data/raw/*.tar.gz
+*.faiss
+*.index
+
+# Test & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Results and figures generated during experiments
+# (Keep tables and final figures in git if desired, ignore scratch/raw)
+results/raw/*.pkl

@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-11-09T16:07:39.135856+00:00",
+  "dataset": "scifact",
+  "validation_passed": true,
+  "summary": {
+    "total_checks": 10,
+    "passed_checks": 10,
+    "failed_checks": 0
+  },
+  "safe_to_use_in_paper": true,
+  "checks": {
+    "1_qrels_coverage": {
+      "passed": true,
+      "total_queries_checked": 300,
+      "discrepant_qrels_queries": [],
+      "details": "All 300 evaluated queries strictly align with official qrels."
+    },
+    "2_corpus_id_validity": {
+      "passed": true,
+      "total_retrieved_docs_checked": 21600,
+      "invalid_document_ids_count": 0,
+      "invalid_document_ids": [],
+      "details": "All 21600 retrieved document IDs exist in the corpus."
+    },
+    "3_evidence_query_validity": {
+      "passed": true,
+      "total_evidence_records_checked": 366,
+      "invalid_query_ids_count": 0,
+      "invalid_query_ids": [],
+      "details": "All 366 evidence records map to valid queries."
+    },
+    "4_evidence_text_mapping": {
+      "passed": true,
+      "total_matched_evidence_checked": 366,
+      "failed_matches_count": 0,
+      "failed_matches": [],
+      "details": "All 366 mapped evidence sentences exist verbatim or normalized in their corpus document."
+    },
+    "5_score_monotonicity": {
+      "passed": true,
+      "total_runs_checked": 3600,
+      "non_monotonic_runs_count": 0,
+      "details": "All retrieved result lists are strictly sorted by score non-increasingly."
+    },
+    "6_no_duplicate_retrieved_ids": {
+      "passed": true,
+      "total_runs_checked": 3600,
+      "duplicate_runs_count": 0,
+      "details": "All result lists contain strictly unique document IDs (no duplicates)."
+    },
+    "7_metric_ranges": {
+      "passed": true,
+      "violations": [],
+      "details": "All metric values strictly adhere to valid ranges: Recall, Precision, MRR, EvidenceRecall in [0, 1], EvidenceCompleteness in {0, 1}, and Latency >= 0."
+    },
+    "8_consistent_query_counts": {
+      "passed": true,
+      "query_counts_found": [
+        300
+      ],
+      "details": "All 12 experimental configurations evaluated the exact same query count (300)."
+    },
+    "9_missing_evidence_not_penalized": {
+      "passed": true,
+      "unannotated_queries_count": 1344,
+      "unannotated_queries_with_falsified_zeros": 0,
+      "details": "Queries without evidence annotations correctly have null/NaN evidence metrics and are not penalized with artificial zeros."
+    },
+    "10_summary_recomputability": {
+      "passed": true,
+      "mismatches_count": 0,
+      "mismatches": [],
+      "details": "100% of summary metrics across all configurations were independently recomputed and match per-query averages."
+    }
+  }
+}

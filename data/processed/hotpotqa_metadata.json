@@ -1,0 +1,13 @@
+{
+  "sampling_seed": 12345,
+  "sample_size": 500,
+  "hf_dataset_id": "hotpotqa/hotpot_qa",
+  "hf_config": "distractor",
+  "hf_split": "validation",
+  "construction_method": "Candidate corpus constructed from distractor paragraphs supplied per question. This is NOT full-Wikipedia retrieval.",
+  "total_questions": 500,
+  "total_paragraphs": 4954,
+  "total_evidence_items": 1208,
+  "invalid_supporting_facts_count": 0,
+  "timestamp": "2026-11-09T14:06:21.143385+00:00"
+}

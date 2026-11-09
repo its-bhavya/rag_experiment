@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-11-09T16:07:35.849550+00:00",
+  "checks": {
+    "candidate_completeness": {
+      "passed": true,
+      "message": "500/500 questions have candidate paragraphs."
+    },
+    "gold_doc_ids_in_candidates": {
+      "passed": true,
+      "message": "0 gold doc_id references not found in candidate pool."
+    },
+    "supporting_fact_sent_indices": {
+      "passed": true,
+      "message": "0 supporting facts have out-of-range sentence indices."
+    },
+    "evidence_text_in_sentences": {
+      "passed": true,
+      "message": "0 evidence items have text mismatches."
+    },
+    "no_duplicate_doc_ids": {
+      "passed": true,
+      "message": "0 questions have duplicate doc_ids in their candidate pool."
+    },
+    "retrieved_doc_ids_in_candidate_pool": {
+      "passed": true,
+      "message": "0 retrieved doc_ids not in candidate pool."
+    },
+    "scores_non_increasing": {
+      "passed": true,
+      "message": "0 score-ordering violations found."
+    },
+    "summary_metrics_recomputable": {
+      "passed": true,
+      "message": "0 metric summary discrepancies found."
+    },
+    "invalid_facts_documented": {
+      "passed": true,
+      "message": "Questions file has 0 invalid facts; metadata reports 0."
+    }
+  },
+  "failed_checks": [],
+  "summary": {
+    "total_checks": 9,
+    "passed": 9,
+    "failed": 0,
+    "all_passed": true
+  }
+}
